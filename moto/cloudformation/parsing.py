@@ -402,6 +402,13 @@ def parse_and_delete_resource(
 ) -> None:
     resource_type = resource_json["Type"]
     resource_class = resource_class_from_type(resource_type)
+    
+    if not resource_class:
+        warnings.warn(
+            f"Tried to parse {resource_type} but it's not supported by moto's CloudFormation implementation"
+        )
+        return
+    
     if not hasattr(
         resource_class.delete_from_cloudformation_json, "__isabstractmethod__"
     ):
@@ -664,6 +671,13 @@ class ResourceMap(collections_abc.Mapping):  # type: ignore[type-arg]
                 ]
                 attr = value["Fn::GetAtt"][1]
                 resource_class = resource_class_from_type(resource_type)
+                
+                if not resource_class:
+                    warnings.warn(
+                        f"Tried to parse {resource_type} but it's not supported by moto's CloudFormation implementation"
+                    )
+                    return
+                
                 if not resource_class.has_cfn_attr(attr):
                     # AWS::SQS::Queue --> Queue
                     short_type = resource_type[resource_type.rindex(":") + 1 :]
